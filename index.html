@@ -1,0 +1,1594 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SES Manager</title>
+  <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+  <style>
+    :root {
+      --bg:         #f5f7fa;
+      --surface:    #ffffff;
+      --surface2:   #f0f3f8;
+      --border:     #d0d9e8;
+      --border2:    #e2e8f0;
+      --accent:     #1a3a6b;
+      --accent2:    #1a2a44;
+      --accent-lt:  #2c5282;
+      --accent-hl:  #3b82c4;
+      --success:    #1a7a3c;
+      --success-bg: #e8f5ee;
+      --danger:     #b91c1c;
+      --danger-bg:  #fee2e2;
+      --warning:    #92400e;
+      --warning-bg: #fef3c7;
+      --purple:     #4c1d95;
+      --text:       #1a2a44;
+      --text-muted: #4a6080;
+      --text-dim:   #7a90aa;
+      --font-mono:  'Courier New', monospace;
+      --font-sans:  'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+      --radius:     6px;
+      --radius-lg:  10px;
+      --shadow:     0 2px 12px rgba(26,42,68,0.10);
+      --shadow-sm:  0 1px 4px rgba(26,42,68,0.07);
+      --tr:         0.15s ease;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    button { cursor: pointer; font-family: inherit; }
+    input, select {
+      font-family: inherit;
+      font-size: 14px;
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 7px 11px;
+      outline: none;
+      transition: border-color var(--tr), box-shadow var(--tr);
+      width: 100%;
+    }
+    input:focus, select:focus {
+      border-color: var(--accent-hl);
+      box-shadow: 0 0 0 3px rgba(59,130,196,0.15);
+    }
+    select option { background: var(--surface); color: var(--text); }
+
+    .app-header {
+      background: var(--accent2);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 54px;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 8px rgba(26,42,68,0.18);
+    }
+    .logo {
+      font-size: 16px; font-weight: 700; letter-spacing: -0.01em;
+      color: #ffffff;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .logo svg { stroke: #7eb8f0; }
+    .logo span { color: #7eb8f0; font-weight: 400; }
+
+    main { max-width: 1300px; margin: 0 auto; padding: 22px 16px 80px; }
+
+    .tabs {
+      display: flex; gap: 2px;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 22px;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      background: none; border: none;
+      color: var(--text-muted);
+      padding: 9px 16px;
+      font-size: 13px; font-weight: 600;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: color var(--tr), border-color var(--tr);
+    }
+    .tab-btn svg { width: 14px; height: 14px; }
+    .tab-btn:hover { color: var(--accent); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+    .card-title {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.09em;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+      display: flex; align-items: center; gap: 7px;
+    }
+    .card-title::before {
+      content: ''; display: inline-block;
+      width: 3px; height: 13px;
+      background: var(--accent); border-radius: 2px;
+    }
+    .card-title svg { stroke: var(--accent); }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+      gap: 11px;
+    }
+    .form-group label {
+      display: block; font-size: 11px;
+      color: var(--text-muted); margin-bottom: 4px; font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 8px 14px; border: none;
+      border-radius: var(--radius);
+      font-size: 13px; font-weight: 600;
+      transition: opacity var(--tr), transform var(--tr), background var(--tr), box-shadow var(--tr);
+    }
+    .btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--accent2); color: #fff; box-shadow: 0 2px 6px rgba(26,42,68,0.25); }
+    .btn-primary:hover { background: var(--accent-lt); }
+    .btn-success { background: var(--success-bg); color: var(--success); border: 1px solid #a7d9b5; }
+    .btn-success:hover { background: #d1edda; }
+    .btn-danger  { background: var(--danger-bg); color: var(--danger); border: 1px solid #fca5a5; }
+    .btn-danger:hover  { background: #fecaca; }
+    .btn-edit    { background: #e8f0fb; color: var(--accent-lt); border: 1px solid #bad0ef; }
+    .btn-edit:hover    { background: #d0e2f7; }
+    .btn-sm { padding: 4px 9px; font-size: 12px; }
+    .btn-row { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; align-items: center; }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 13px 15px;
+      box-shadow: var(--shadow-sm);
+    }
+    .kpi-label {
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.07em;
+      color: var(--text-muted); margin-bottom: 4px;
+    }
+    .kpi-value {
+      font-size: 19px; font-weight: 700;
+      color: var(--text); font-variant-numeric: tabular-nums;
+    }
+    .kpi-sub { font-size: 10px; color: var(--text-dim); margin-top: 1px; }
+    .kpi-value.accent  { color: var(--accent); }
+    .kpi-value.success { color: var(--success); }
+    .kpi-value.warning { color: #c07000; }
+    .kpi-value.danger  { color: var(--danger); }
+    .kpi-value.purple  { color: var(--purple); }
+
+    .goal-row {
+      display: flex; align-items: center;
+      gap: 12px; flex-wrap: wrap; margin-bottom: 10px;
+    }
+    .goal-row label { font-size: 12px; color: var(--text-muted); white-space: nowrap; font-weight: 600; }
+    .goal-row input { max-width: 200px; }
+    .progress-bar-wrap {
+      background: var(--surface2); border-radius: 20px;
+      height: 8px; overflow: hidden; margin-top: 5px;
+      border: 1px solid var(--border2);
+    }
+    .progress-bar {
+      height: 100%; border-radius: 20px;
+      background: linear-gradient(90deg, var(--accent2), var(--accent-hl));
+      transition: width 0.45s ease;
+    }
+
+    .month-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+      gap: 9px;
+    }
+    .month-grid .form-group label { font-size: 11px; }
+
+    .filter-bar {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      align-items: flex-end; margin-bottom: 14px;
+    }
+    .filter-bar .form-group { flex: 1; min-width: 130px; max-width: 210px; }
+    .filter-bar .form-group label { font-size: 11px; }
+
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      min-width: 760px;
+    }
+    thead th {
+      background: var(--surface2);
+      color: var(--text-muted);
+      font-weight: 700; font-size: 10px;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      padding: 9px 12px;
+      text-align: left;
+      border-bottom: 2px solid var(--border);
+      white-space: nowrap;
+    }
+    tbody tr { border-bottom: 1px solid var(--border2); transition: background var(--tr); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #f0f5fb; }
+    tbody td { padding: 9px 12px; color: var(--text); vertical-align: middle; }
+
+    tr.group-header td {
+      background: #e8f0fb;
+      color: var(--accent);
+      font-weight: 700; font-size: 12px;
+      padding: 6px 12px; letter-spacing: 0.02em;
+      border-top: 1px solid #c5d8f0;
+    }
+
+    tbody tr.low-margin td { color: var(--danger); }
+    tbody tr.low-margin { background: #fff5f5; }
+    tbody tr.trash-row { background: #fafafa; }
+    tbody tr.trash-row td { color: var(--text-dim); }
+
+    .badge {
+      display: inline-block; padding: 2px 8px;
+      border-radius: 20px; font-size: 11px; font-weight: 600;
+    }
+    .badge-employee  { background: #d1fae5; color: #065f46; }
+    .badge-contract  { background: #dbeafe; color: #1e40af; }
+    .badge-partner   { background: #fef3c7; color: #92400e; }
+    .badge-freelance { background: #f1f5f9; color: #475569; }
+
+    .rank-list { padding: 4px 0; }
+    .rank-bar-row {
+      display: flex; align-items: center;
+      gap: 10px; margin-bottom: 9px;
+    }
+    .rank-bar-rank  { font-size: 11px; font-weight: 700; color: var(--text-dim); width: 20px; text-align: center; }
+    .rank-bar-label { width: 120px; font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+    .rank-bar-track { flex: 1; background: var(--surface2); border-radius: 4px; height: 20px; overflow: hidden; min-width: 60px; border: 1px solid var(--border2); }
+    .rank-bar-fill  { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 11px; font-weight: 700; color: #fff; transition: width 0.5s ease; white-space: nowrap; min-width: 0; }
+
+    .pf-row {
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      background: var(--surface);
+    }
+    .pf-row:last-child { margin-bottom: 0; }
+    .pf-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+
+    .pf-year-inputs {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      align-items: flex-end;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      margin-bottom: 8px;
+    }
+    .pf-year-item {
+      display: flex; flex-direction: column; gap: 3px;
+      min-width: 130px;
+    }
+    .pf-year-item label {
+      font-size: 10px; font-weight: 700; color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+    .pf-year-item input, .pf-year-item select {
+      padding: 5px 8px; font-size: 12px; max-width: 135px;
+    }
+    .pf-save-btn { align-self: flex-end; }
+
+    .pf-history-row {
+      display: flex; gap: 0; flex-wrap: wrap;
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .pf-hist-item {
+      flex: 1; min-width: 90px;
+      padding: 6px 10px;
+      border-right: 1px solid var(--border2);
+      background: var(--surface);
+    }
+    .pf-hist-item:last-child { border-right: none; }
+    .pf-hist-year {
+      font-size: 10px; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;
+    }
+    .pf-hist-val {
+      font-size: 12px; font-weight: 700; color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+    .pf-hist-diff { font-size: 10px; margin-top: 1px; }
+    .pf-hist-diff.up   { color: var(--success); }
+    .pf-hist-diff.down { color: var(--danger); }
+    .pf-hist-diff.flat { color: var(--text-dim); }
+    .pf-hist-empty { font-size: 12px; color: var(--text-dim); padding: 8px 10px; }
+
+    .chart-wrap { position: relative; width: 100%; }
+    canvas { display: block; }
+
+    .empty-state {
+      text-align: center; padding: 44px 24px;
+      color: var(--text-muted);
+    }
+    .empty-state svg { margin: 0 auto 10px; display: block; opacity: 0.3; stroke: var(--text-muted); }
+    .empty-state p { font-size: 13px; }
+
+    .trash-notice {
+      background: #fff8e1;
+      border: 1px solid #fcd34d;
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      font-size: 12px;
+      color: #78350f;
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 14px;
+    }
+    .trash-notice svg { stroke: #92400e; flex-shrink: 0; }
+
+    #toast {
+      position: fixed; bottom: 22px; right: 22px;
+      background: var(--accent2);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius);
+      padding: 11px 16px;
+      font-size: 13px; color: #fff;
+      box-shadow: var(--shadow);
+      transform: translateY(80px); opacity: 0;
+      transition: transform 0.25s ease, opacity 0.25s ease;
+      z-index: 300; max-width: 300px;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+
+    @media (max-width: 640px) {
+      .app-header { padding: 0 12px; }
+      main { padding: 12px 8px 60px; }
+      .form-grid { grid-template-columns: 1fr 1fr; }
+      .kpi-grid  { grid-template-columns: repeat(2,1fr); }
+      .filter-bar .form-group { max-width: 100%; }
+      .tab-btn { padding: 9px 10px; font-size: 12px; }
+      .month-grid { grid-template-columns: repeat(3,1fr); }
+      .rank-bar-label { width: 80px; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="logo">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+    </svg>
+    SES <span>Manager</span>
+  </div>
+</header>
+
+<main>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="sales">
+      <svg data-feather="users"></svg>売上・要員管理
+    </button>
+    <button class="tab-btn" data-tab="customer">
+      <svg data-feather="bar-chart-2"></svg>顧客別売上
+    </button>
+    <button class="tab-btn" data-tab="price">
+      <svg data-feather="trending-up"></svg>単価改定
+    </button>
+    <button class="tab-btn" data-tab="trash">
+      <svg data-feather="trash-2"></svg>ゴミ箱
+    </button>
+  </div>
+
+  <!-- タブ①: 売上・要員管理 -->
+  <div id="tab-sales" class="tab-panel active">
+
+    <div class="card">
+      <div class="card-title">
+        <svg data-feather="target"></svg>
+        年次売上目標 &amp; 進捗
+      </div>
+      <div class="goal-row">
+        <label>年次売上目標（円）</label>
+        <input type="number" id="annual-goal" placeholder="例: 100000000"
+               style="max-width:200px;" oninput="saveGoal();renderGoalProgress();" />
+        <span id="goal-diff-label" style="font-size:13px;font-weight:700;"></span>
+      </div>
+      <div id="goal-progress-wrap" style="display:none;">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">
+          進捗率: <span id="goal-progress-pct" style="color:var(--accent);font-weight:700;"></span>
+          &nbsp;／&nbsp;月次売上合計: <span id="goal-monthly-sum" style="color:var(--text-muted);font-weight:600;"></span>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" id="goal-progress-bar" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kpi-grid" id="kpi-grid"></div>
+
+    <div class="card">
+      <div class="card-title">
+        <svg data-feather="calendar"></svg>
+        月次売上入力（4月〜翌年3月）
+      </div>
+      <div class="month-grid" id="month-inputs"></div>
+      <div class="chart-wrap" style="margin-top:18px;">
+        <canvas id="monthly-chart" height="190"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <svg data-feather="user-plus"></svg>
+        要員登録
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>顧客名 *</label>
+          <input type="text" id="f-client" placeholder="株式会社〇〇" />
+        </div>
+        <div class="form-group">
+          <label>要員名 *</label>
+          <input type="text" id="f-name" placeholder="山田 太郎" />
+        </div>
+        <div class="form-group">
+          <label>所属区分 *</label>
+          <select id="f-type" onchange="onTypeChange()">
+            <option value="">選択してください</option>
+            <option value="employee">社員</option>
+            <option value="contract">契約社員</option>
+            <option value="partner">パートナー</option>
+            <option value="freelance">個人事業主</option>
+          </select>
+        </div>
+        <div class="form-group" id="f-partner-wrap" style="display:none;">
+          <label>パートナー会社名</label>
+          <input type="text" id="f-partner" placeholder="〇〇パートナーズ" />
+        </div>
+        <div class="form-group">
+          <label>参画チーム名</label>
+          <input type="text" id="f-team" placeholder="開発チームA" />
+        </div>
+        <div class="form-group">
+          <label>売上単価（円）*</label>
+          <input type="number" id="f-revenue" placeholder="700000" min="0" />
+        </div>
+        <div class="form-group" id="f-cost-wrap" style="display:none;">
+          <label>仕入れ単価（円）</label>
+          <input type="number" id="f-cost" placeholder="550000" min="0" />
+        </div>
+      </div>
+      <div id="calc-preview" style="margin-top:10px;font-size:12px;color:var(--text-muted);display:none;">
+        利益: <span id="prev-profit" style="color:var(--success);font-weight:700;"></span>円 ／
+        利益率: <span id="prev-rate" style="color:var(--accent);font-weight:700;"></span>%
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="submitSales()">
+          <svg data-feather="plus-circle"></svg>
+          <span id="btn-sales-label">追加</span>
+        </button>
+        <button class="btn btn-edit" onclick="resetSalesForm()" id="btn-cancel-sales" style="display:none;">
+          <svg data-feather="x"></svg>キャンセル
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <div class="form-group">
+        <label>顧客名で絞り込み</label>
+        <input type="text" id="filter-client" placeholder="顧客名" oninput="renderSalesTable()" />
+      </div>
+      <div class="form-group">
+        <label>所属区分</label>
+        <select id="filter-type" onchange="renderSalesTable()">
+          <option value="">すべて</option>
+          <option value="employee">社員</option>
+          <option value="contract">契約社員</option>
+          <option value="partner">パートナー</option>
+          <option value="freelance">個人事業主</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>パートナー会社</label>
+        <input type="text" id="filter-partner" placeholder="会社名" oninput="renderSalesTable()" />
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>顧客名</th><th>要員名</th><th>所属区分</th><th>パートナー会社</th>
+            <th>参画チーム</th><th>売上単価</th><th>仕入単価</th>
+            <th>利益</th><th>利益率</th><th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="sales-tbody"></tbody>
+      </table>
+    </div>
+    <div id="sales-empty" class="empty-state" style="display:none;">
+      <svg data-feather="users" width="40" height="40"></svg>
+      <p>要員データがありません。上のフォームから追加してください。</p>
+    </div>
+
+  </div><!-- /tab-sales -->
+
+  <!-- タブ②: 顧客別売上 -->
+  <div id="tab-customer" class="tab-panel">
+
+    <div class="card">
+      <div class="card-title"><svg data-feather="bar-chart-2"></svg>顧客別 月次売上ランキング</div>
+      <div class="rank-list" id="cust-monthly-rank"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><svg data-feather="bar-chart-2"></svg>顧客別 年次売上ランキング（月次×12換算）</div>
+      <div class="rank-list" id="cust-yearly-rank"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><svg data-feather="info"></svg>顧客別 指標一覧</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>顧客名</th><th>月次売上</th><th>年次売上</th>
+              <th title="社員・契約社員を除外して計算">収益率 (P/F)</th>
+              <th>社員+契約</th><th>P+個人事業</th><th>平均単価</th>
+            </tr>
+          </thead>
+          <tbody id="customer-tbody"></tbody>
+        </table>
+      </div>
+      <div id="customer-empty" class="empty-state" style="display:none;">
+        <svg data-feather="bar-chart-2" width="40" height="40"></svg>
+        <p>要員データがありません。</p>
+      </div>
+    </div>
+
+  </div><!-- /tab-customer -->
+
+  <!-- タブ③: 単価改定 -->
+  <div id="tab-price" class="tab-panel">
+
+    <div class="kpi-grid" id="price-kpi-grid"></div>
+
+    <div class="card">
+      <div class="card-title"><svg data-feather="trending-up"></svg>単価UP推移グラフ（年ごと / 過去5年）</div>
+      <div style="display:flex;gap:16px;font-size:11px;color:var(--text-muted);margin-bottom:10px;flex-wrap:wrap;">
+        <span><span style="display:inline-block;width:10px;height:10px;background:#1a3a6b;border-radius:2px;margin-right:4px;vertical-align:middle;"></span>売上UP合計</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:#c07000;border-radius:2px;margin-right:4px;vertical-align:middle;"></span>仕入UP合計</span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="price-up-chart" height="220"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><svg data-feather="edit-3"></svg>単価改定入力（要員ごと）</div>
+      <div id="price-form-list"></div>
+      <div id="price-form-empty" class="empty-state" style="display:none;">
+        <svg data-feather="users" width="36" height="36"></svg>
+        <p>要員データがありません。売上・要員管理タブで登録してください。</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><svg data-feather="clock"></svg>単価改定履歴</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>年度</th><th>要員名</th><th>顧客名</th>
+              <th>売上単価</th><th>前年比UP額</th>
+              <th>仕入単価</th><th>前年比UP額（仕入）</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="price-history-tbody"></tbody>
+        </table>
+      </div>
+      <div id="price-history-empty" class="empty-state" style="display:none;">
+        <svg data-feather="clock" width="36" height="36"></svg>
+        <p>改定履歴がありません。</p>
+      </div>
+    </div>
+
+  </div><!-- /tab-price -->
+
+  <!-- タブ④: ゴミ箱 -->
+  <div id="tab-trash" class="tab-panel">
+
+    <div class="trash-notice">
+      <svg data-feather="info" width="14" height="14"></svg>
+      ゴミ箱内の要員は「復元」で元のリストへ戻せます。「完全削除」後はデータを取り出せません。
+    </div>
+
+    <div class="card">
+      <div class="card-title"><svg data-feather="trash-2"></svg>削除済み要員一覧</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>顧客名</th><th>要員名</th><th>所属区分</th><th>パートナー会社</th>
+              <th>参画チーム</th><th>売上単価</th><th>仕入単価</th>
+              <th>利益</th><th>利益率</th><th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="trash-tbody"></tbody>
+        </table>
+      </div>
+      <div id="trash-empty" class="empty-state">
+        <svg data-feather="trash-2" width="40" height="40"></svg>
+        <p>ゴミ箱は空です。</p>
+      </div>
+    </div>
+
+  </div><!-- /tab-trash -->
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+
+/* ================================================================
+   定数
+   ================================================================ */
+const SK = {
+  sales:        'ses_sales_v2',
+  trash:        'ses_trash_v1',
+  goal:         'ses_goal_v1',
+  monthly:      'ses_monthly_v2',
+  priceHistory: 'ses_price_v2',
+};
+
+const TYPE_LABELS = { employee:'社員', contract:'契約社員', partner:'パートナー', freelance:'個人事業主' };
+const TYPE_BADGE  = { employee:'badge-employee', contract:'badge-contract', partner:'badge-partner', freelance:'badge-freelance' };
+const MONTHS      = ['4月','5月','6月','7月','8月','9月','10月','11月','12月','1月','2月','3月'];
+const CUR_YEAR    = new Date().getFullYear();
+
+/* ================================================================
+   ストレージ
+   ================================================================ */
+function load(key, def) {
+  try { const v = localStorage.getItem(key); return v !== null ? JSON.parse(v) : def; }
+  catch { return def; }
+}
+function save(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
+
+/* ================================================================
+   ユーティリティ
+   ================================================================ */
+function uid()  { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+function fmt(n) { if (n === null || n === undefined || isNaN(n)) return '—'; return Number(n).toLocaleString('ja-JP'); }
+function esc(s) {
+  return String(s||'')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function toast(msg, dur=2400) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), dur);
+}
+
+/* ================================================================
+   タブ切り替え
+   ================================================================ */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'customer') renderCustomerTab();
+    if (btn.dataset.tab === 'price')    renderPriceTab();
+    if (btn.dataset.tab === 'trash')    renderTrashTab();
+    feather.replace();
+  });
+});
+
+/* ================================================================
+   データ
+   ================================================================ */
+let salesData      = load(SK.sales, []);
+let trashData      = load(SK.trash, []);
+let editingSalesId = null;
+
+/* ================================================================
+   フォーム連動
+   ================================================================ */
+function onTypeChange() {
+  const type = document.getElementById('f-type').value;
+  // ⑤ パートナーまたは個人事業主の場合に仕入単価を表示
+  const showCost    = (type === 'partner' || type === 'freelance');
+  const showPartner = (type === 'partner');
+  document.getElementById('f-partner-wrap').style.display = showPartner ? '' : 'none';
+  document.getElementById('f-cost-wrap').style.display    = showCost    ? '' : 'none';
+  updateCalcPreview();
+}
+
+function updateCalcPreview() {
+  const rev  = parseFloat(document.getElementById('f-revenue').value) || 0;
+  const cost = parseFloat(document.getElementById('f-cost').value)    || 0;
+  const type = document.getElementById('f-type').value;
+  const el   = document.getElementById('calc-preview');
+  if (rev <= 0) { el.style.display = 'none'; return; }
+  el.style.display = '';
+  const hasCost = (type === 'partner' || type === 'freelance');
+  const profit  = hasCost ? rev - cost : rev;
+  document.getElementById('prev-profit').textContent = fmt(profit);
+  document.getElementById('prev-rate').textContent   = rev > 0 ? ((profit/rev)*100).toFixed(1) : '—';
+}
+
+['f-revenue','f-cost'].forEach(function(id) {
+  document.getElementById(id).addEventListener('input', updateCalcPreview);
+});
+
+/* ================================================================
+   要員 CRUD
+   ================================================================ */
+function submitSales() {
+  const client  = document.getElementById('f-client').value.trim();
+  const name    = document.getElementById('f-name').value.trim();
+  const type    = document.getElementById('f-type').value;
+  const partner = document.getElementById('f-partner').value.trim();
+  const team    = document.getElementById('f-team').value.trim();
+  const revenue = parseFloat(document.getElementById('f-revenue').value);
+  const cost    = parseFloat(document.getElementById('f-cost').value) || 0;
+
+  if (!client)                        { toast('⚠ 顧客名を入力してください'); return; }
+  if (!name)                          { toast('⚠ 要員名を入力してください'); return; }
+  if (!type)                          { toast('⚠ 所属区分を選択してください'); return; }
+  if (isNaN(revenue) || revenue <= 0) { toast('⚠ 売上単価を正しく入力してください'); return; }
+
+  const hasCost    = (type === 'partner' || type === 'freelance');
+  const profit     = hasCost ? revenue - cost : revenue;
+  const profitRate = revenue > 0 ? parseFloat(((profit/revenue)*100).toFixed(2)) : 0;
+  const record     = { client, name, type, partner, team, revenue, cost: hasCost ? cost : 0, profit, profitRate };
+
+  if (editingSalesId) {
+    const idx = salesData.findIndex(r => r.id === editingSalesId);
+    if (idx !== -1) salesData[idx] = { ...salesData[idx], ...record };
+    toast('✅ 要員情報を更新しました');
+  } else {
+    salesData.push({ id: uid(), ...record });
+    toast('✅ 要員を追加しました');
+  }
+
+  save(SK.sales, salesData);
+  resetSalesForm();
+  renderAll();
+}
+
+function resetSalesForm() {
+  ['f-client','f-name','f-team','f-partner','f-revenue','f-cost'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('f-type').value = '';
+  document.getElementById('f-partner-wrap').style.display = 'none';
+  document.getElementById('f-cost-wrap').style.display    = 'none';
+  document.getElementById('calc-preview').style.display   = 'none';
+  document.getElementById('btn-sales-label').textContent  = '追加';
+  document.getElementById('btn-cancel-sales').style.display = 'none';
+  editingSalesId = null;
+  feather.replace();
+}
+
+function editSales(id) {
+  const r = salesData.find(x => x.id === id);
+  if (!r) return;
+  editingSalesId = id;
+  document.getElementById('f-client').value  = r.client;
+  document.getElementById('f-name').value    = r.name;
+  document.getElementById('f-type').value    = r.type;
+  document.getElementById('f-partner').value = r.partner || '';
+  document.getElementById('f-team').value    = r.team    || '';
+  document.getElementById('f-revenue').value = r.revenue;
+  document.getElementById('f-cost').value    = r.cost    || '';
+  onTypeChange();
+  document.getElementById('btn-sales-label').textContent    = '更新';
+  document.getElementById('btn-cancel-sales').style.display = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  feather.replace();
+}
+
+/* ② 削除 → ゴミ箱へ移動（論理削除） */
+function deleteSales(id) {
+  if (!confirm('この要員をゴミ箱に移動しますか？')) return;
+  const idx = salesData.findIndex(r => r.id === id);
+  if (idx === -1) return;
+  const rec = salesData.splice(idx, 1)[0];
+  rec._deletedAt = new Date().toISOString();
+  trashData.push(rec);
+  save(SK.sales, salesData);
+  save(SK.trash, trashData);
+  renderAll();
+  toast('🗑 ゴミ箱に移動しました');
+}
+
+/* ================================================================
+   ① KPI集計（表示順固定）
+   ================================================================ */
+function renderKPI() {
+  const d       = salesData;
+  const total   = d.length;
+  const emp     = d.filter(r => r.type === 'employee').length;
+  const con     = d.filter(r => r.type === 'contract').length;
+  const par     = d.filter(r => r.type === 'partner').length;
+  const fre     = d.filter(r => r.type === 'freelance').length;
+  const parCos  = new Set(d.filter(r => r.type==='partner'&&r.partner).map(r=>r.partner)).size;
+
+  const mRev    = d.reduce((s,r) => s + (r.revenue||0), 0);
+  const mProfit = d.reduce((s,r) => s + (r.profit ||0), 0);
+  const mProfitP= d.filter(r=>r.type==='partner').reduce((s,r) => s + (r.profit||0), 0);
+  const yRev    = mRev    * 12;
+  const yProfit = mProfit * 12;
+  const yProfitP= mProfitP* 12;
+
+  /* ① 指定された順序で固定 */
+  const kpis = [
+    { label:'総人数',           value: total   + ' 名', cls:'' },
+    { label:'社員',             value: emp     + ' 名', cls:'' },
+    { label:'契約社員',         value: con     + ' 名', cls:'' },
+    { label:'パートナー',       value: par     + ' 名', cls:'' },
+    { label:'個人事業主',       value: fre     + ' 名', cls:'' },
+    { label:'パートナー会社数', value: parCos  + ' 社', cls:'' },
+    { label:'年次利益（全体）', value:'¥'+fmt(yProfit), cls:'success', sub:'全要員合計' },
+    { label:'月次利益（全体）', value:'¥'+fmt(mProfit), cls:'success', sub:'全要員合計' },
+    { label:'月次利益（P）',    value:'¥'+fmt(mProfitP),cls:'warning', sub:'パートナーのみ' },
+    { label:'年次利益（P）',    value:'¥'+fmt(yProfitP),cls:'warning', sub:'パートナーのみ' },
+    { label:'年次利益（全体）', value:'¥'+fmt(yProfit), cls:'success', sub:'全要員合計' },
+    { label:'月次売上合計',     value:'¥'+fmt(mRev),    cls:'accent' },
+    { label:'年次売上合計',     value:'¥'+fmt(yRev),    cls:'accent' },
+  ];
+
+  document.getElementById('kpi-grid').innerHTML = kpis.map(k => `
+    <div class="kpi-card">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value ${k.cls}">${k.value}</div>
+      ${k.sub ? `<div class="kpi-sub">${k.sub}</div>` : ''}
+    </div>`).join('');
+}
+
+/* ================================================================
+   要員テーブル
+   ================================================================ */
+function renderSalesTable() {
+  const fc = document.getElementById('filter-client').value.trim().toLowerCase();
+  const ft = document.getElementById('filter-type').value;
+  const fp = document.getElementById('filter-partner').value.trim().toLowerCase();
+
+  let list = salesData.filter(r => {
+    if (fc && !r.client.toLowerCase().includes(fc)) return false;
+    if (ft && r.type !== ft) return false;
+    if (fp && !(r.partner||'').toLowerCase().includes(fp)) return false;
+    return true;
+  });
+  list = list.slice().sort((a,b) => a.client.localeCompare(b.client,'ja'));
+
+  const tbody = document.getElementById('sales-tbody');
+  const empty = document.getElementById('sales-empty');
+
+  if (list.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = '';
+    feather.replace();
+    return;
+  }
+  empty.style.display = 'none';
+
+  let lastClient = null;
+  let html = '';
+  list.forEach(r => {
+    if (r.client !== lastClient) {
+      lastClient = r.client;
+      const gc  = list.filter(x => x.client === r.client).length;
+      const gRev= list.filter(x => x.client === r.client).reduce((s,x)=>s+(x.revenue||0),0);
+      html += `<tr class="group-header">
+        <td colspan="10">
+          <span style="margin-right:8px;">▸ ${esc(r.client)}</span>
+          <span style="font-size:11px;font-weight:400;color:var(--text-muted);">
+            ${gc}名 ／ 月次売上合計: ¥${fmt(gRev)}
+          </span>
+        </td>
+      </tr>`;
+    }
+    const hasCost  = (r.type === 'partner' || r.type === 'freelance');
+    const low      = r.profitRate < 10 ? 'low-margin' : '';
+    const rateC    = r.profitRate < 10 ? 'var(--danger)' : r.profitRate < 20 ? '#c07000' : 'var(--success)';
+    /* ⑤ 仕入単価: パートナー・個人事業主のみ表示 */
+    const costCell = hasCost ? '¥'+fmt(r.cost) : '—';
+    html += `<tr class="${low}">
+      <td>${esc(r.client)}</td>
+      <td>${esc(r.name)}</td>
+      <td><span class="badge ${TYPE_BADGE[r.type]}">${TYPE_LABELS[r.type]}</span></td>
+      <td>${esc(r.partner||'—')}</td>
+      <td>${esc(r.team||'—')}</td>
+      <td>¥${fmt(r.revenue)}</td>
+      <td>${costCell}</td>
+      <td>¥${fmt(r.profit)}</td>
+      <td style="color:${rateC};font-weight:600;">${r.profitRate}%</td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-edit btn-sm" onclick="editSales('${r.id}')">
+          <svg data-feather="edit-2"></svg>編集
+        </button>
+        <button class="btn btn-danger btn-sm" onclick="deleteSales('${r.id}')">
+          <svg data-feather="trash-2"></svg>削除
+        </button>
+      </td>
+    </tr>`;
+  });
+  tbody.innerHTML = html;
+  feather.replace();
+}
+
+/* ================================================================
+   売上目標 & 進捗（月次売上合計ベース）
+   ================================================================ */
+let annualGoal = load(SK.goal, 0);
+
+function initGoalInput() {
+  if (annualGoal) document.getElementById('annual-goal').value = annualGoal;
+  renderGoalProgress();
+}
+
+function saveGoal() {
+  annualGoal = parseFloat(document.getElementById('annual-goal').value) || 0;
+  save(SK.goal, annualGoal);
+}
+
+function renderGoalProgress() {
+  const monthlySum = monthlyData.reduce((s, v) => s + (v || 0), 0);
+  const goal  = annualGoal;
+  const wrap  = document.getElementById('goal-progress-wrap');
+  const diffL = document.getElementById('goal-diff-label');
+  const pctL  = document.getElementById('goal-progress-pct');
+  const bar   = document.getElementById('goal-progress-bar');
+  const sumL  = document.getElementById('goal-monthly-sum');
+
+  if (!goal || goal <= 0) { wrap.style.display='none'; diffL.textContent=''; return; }
+  wrap.style.display = '';
+
+  const diff = monthlySum - goal;
+  const pct  = Math.min(100, (monthlySum / goal * 100)).toFixed(1);
+
+  if (sumL) sumL.textContent = '¥' + fmt(monthlySum);
+  diffL.textContent = diff >= 0 ? `＋¥${fmt(diff)} 達成！` : `あと ¥${fmt(Math.abs(diff))} 不足`;
+  diffL.style.color = diff >= 0 ? 'var(--success)' : 'var(--danger)';
+  pctL.textContent  = pct + '%';
+  bar.style.width   = pct + '%';
+  bar.style.background = diff >= 0
+    ? 'linear-gradient(90deg,var(--success),#4ade80)'
+    : 'linear-gradient(90deg,var(--accent2),var(--accent-hl))';
+}
+
+/* ================================================================
+   月次売上入力（4月〜翌年3月）
+   ================================================================ */
+let monthlyData = load(SK.monthly, Array(12).fill(0));
+
+function initMonthInputs() {
+  const g = document.getElementById('month-inputs');
+  g.innerHTML = MONTHS.map((m, i) => `
+    <div class="form-group">
+      <label>${m}</label>
+      <input type="number" id="mi-${i}" placeholder="0" min="0"
+        value="${monthlyData[i] || ''}"
+        oninput="saveMonthly();drawMonthlyChart();renderGoalProgress();" />
+    </div>`).join('');
+}
+
+function saveMonthly() {
+  monthlyData = MONTHS.map((_, i) => parseFloat(document.getElementById('mi-'+i).value) || 0);
+  save(SK.monthly, monthlyData);
+}
+
+/* ================================================================
+   Y軸キリの良い値
+   ================================================================ */
+function niceMax(maxVal) {
+  if (maxVal <= 0) return 10;
+  const exp  = Math.floor(Math.log10(maxVal));
+  const unit = Math.pow(10, exp);
+  const norm = maxVal / unit;
+  let nice;
+  if      (norm <= 1)    nice = 1;
+  else if (norm <= 2)    nice = 2;
+  else if (norm <= 2.5)  nice = 2.5;
+  else if (norm <= 5)    nice = 5;
+  else                   nice = 10;
+  return nice * unit;
+}
+
+/* ================================================================
+   月次売上グラフ
+   ================================================================ */
+function drawMonthlyChart() {
+  const canvas = document.getElementById('monthly-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const W = rect.width || 600;
+  const H = 190;
+  canvas.width  = W * dpr; canvas.height = H * dpr;
+  canvas.style.width  = W + 'px'; canvas.style.height = H + 'px';
+  ctx.scale(dpr, dpr);
+
+  const PAD = { top:18, right:18, bottom:36, left:82 };
+  ctx.clearRect(0, 0, W, H);
+
+  const vals   = monthlyData;
+  const rawMax = Math.max(...vals, 1);
+  const maxVal = niceMax(rawMax);
+  const chartW = W - PAD.left - PAD.right;
+  const chartH = H - PAD.top  - PAD.bottom;
+  const barW   = chartW / 12;
+
+  const gn = 4;
+  ctx.strokeStyle = '#d0d9e8'; ctx.lineWidth = 1;
+  for (let i = 0; i <= gn; i++) {
+    const y = PAD.top + (chartH / gn) * i;
+    ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(PAD.left + chartW, y); ctx.stroke();
+    const v = maxVal - (maxVal / gn) * i;
+    ctx.fillStyle = '#7a90aa'; ctx.font = '10px monospace'; ctx.textAlign = 'right';
+    ctx.fillText('¥' + fmt(Math.round(v)), PAD.left - 5, y + 4);
+  }
+
+  vals.forEach((v, i) => {
+    const bh = v > 0 ? (v / maxVal) * chartH : 0;
+    const x  = PAD.left + barW * i + barW * 0.14;
+    const y  = PAD.top + chartH - bh;
+    const bw = barW * 0.72;
+    const g  = ctx.createLinearGradient(0, y, 0, y + bh);
+    g.addColorStop(0, '#1a3a6b');
+    g.addColorStop(1, 'rgba(26,58,107,0.30)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(x, y, bw, Math.max(bh, 0), [3, 3, 0, 0]);
+    else ctx.rect(x, y, bw, Math.max(bh, 0));
+    ctx.fill();
+    ctx.fillStyle = '#7a90aa'; ctx.font = '10px monospace'; ctx.textAlign = 'center';
+    ctx.fillText(MONTHS[i], PAD.left + barW * i + barW / 2, H - PAD.bottom + 15);
+  });
+}
+
+/* ================================================================
+   顧客別売上タブ
+   ================================================================ */
+function renderCustomerTab() {
+  const map = {};
+  salesData.forEach(r => {
+    if (!map[r.client]) map[r.client] = { client: r.client, members: [] };
+    map[r.client].members.push(r);
+  });
+  const clients = Object.values(map).sort((a, b) => {
+    const sa = a.members.reduce((s,r)=>s+(r.revenue||0),0);
+    const sb = b.members.reduce((s,r)=>s+(r.revenue||0),0);
+    return sb - sa;
+  });
+
+  renderRankBars('cust-monthly-rank', clients,
+    c => c.members.reduce((s,r)=>s+(r.revenue||0),0), '#1a2a44', '#2c5282');
+  renderRankBars('cust-yearly-rank', clients,
+    c => c.members.reduce((s,r)=>s+(r.revenue||0),0) * 12, '#1a4f2e', '#1a7a3c');
+
+  const tbody = document.getElementById('customer-tbody');
+  const empty = document.getElementById('customer-empty');
+
+  if (clients.length === 0) {
+    tbody.innerHTML = ''; empty.style.display = '';
+    feather.replace(); return;
+  }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = clients.map(c => {
+    const m      = c.members;
+    const mRev   = m.reduce((s,r)=>s+(r.revenue||0),0);
+    const yRev   = mRev * 12;
+    const pf     = m.filter(r => r.type==='partner' || r.type==='freelance');
+    const pfRev  = pf.reduce((s,r)=>s+(r.revenue||0),0);
+    const pfCost = pf.filter(r=>r.type==='partner').reduce((s,r)=>s+(r.cost||0),0);
+    const pfPro  = pfRev - pfCost;
+    const pfRate = pfRev > 0 ? (pfPro/pfRev*100).toFixed(1) + '%' : '—';
+    const ecCnt  = m.filter(r=>r.type==='employee'||r.type==='contract').length;
+    const pfCnt  = m.filter(r=>r.type==='partner' ||r.type==='freelance').length;
+    const avgP   = m.length > 0 ? Math.floor(mRev/m.length) : 0;
+    return `<tr>
+      <td style="font-weight:700;">${esc(c.client)}</td>
+      <td>¥${fmt(mRev)}</td><td>¥${fmt(yRev)}</td>
+      <td style="color:var(--accent);font-weight:600;">${pfRate}</td>
+      <td>${ecCnt} 名</td><td>${pfCnt} 名</td><td>¥${fmt(avgP)}</td>
+    </tr>`;
+  }).join('');
+  feather.replace();
+}
+
+function renderRankBars(containerId, clients, valueFn, colorA, colorB) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (clients.length === 0) {
+    el.innerHTML = '<p style="color:var(--text-muted);font-size:13px;padding:8px;">データがありません</p>';
+    return;
+  }
+  const vals   = clients.map(c => valueFn(c));
+  const maxVal = Math.max(...vals, 1);
+  el.innerHTML = clients.map((c, i) => {
+    const v   = vals[i];
+    const pct = (v / maxVal * 100).toFixed(1);
+    const rankColors = ['#b8860b','#607080','#8b5e3c'];
+    const rankStyle  = i < 3 ? `color:${rankColors[i]};font-weight:800;` : '';
+    return `<div class="rank-bar-row">
+      <div class="rank-bar-rank" style="${rankStyle}">${i+1}</div>
+      <div class="rank-bar-label" title="${esc(c.client)}">${esc(c.client)}</div>
+      <div class="rank-bar-track">
+        <div class="rank-bar-fill" style="width:${pct}%;background:linear-gradient(90deg,${colorA},${colorB});">
+          ¥${fmt(v)}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ================================================================
+   ③ ゴミ箱タブ
+   ================================================================ */
+function renderTrashTab() {
+  const tbody = document.getElementById('trash-tbody');
+  const empty = document.getElementById('trash-empty');
+
+  const list = [...trashData].sort((a,b) => (b._deletedAt||'').localeCompare(a._deletedAt||''));
+
+  if (list.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = '';
+    feather.replace();
+    return;
+  }
+  empty.style.display = 'none';
+
+  let html = '';
+  list.forEach(r => {
+    const hasCost  = (r.type === 'partner' || r.type === 'freelance');
+    const costCell = hasCost ? '¥'+fmt(r.cost) : '—';
+    const rateC    = r.profitRate < 10 ? 'var(--danger)' : r.profitRate < 20 ? '#c07000' : 'var(--success)';
+    html += `<tr class="trash-row">
+      <td>${esc(r.client)}</td>
+      <td>${esc(r.name)}</td>
+      <td><span class="badge ${TYPE_BADGE[r.type]}">${TYPE_LABELS[r.type]}</span></td>
+      <td>${esc(r.partner||'—')}</td>
+      <td>${esc(r.team||'—')}</td>
+      <td>¥${fmt(r.revenue)}</td>
+      <td>${costCell}</td>
+      <td>¥${fmt(r.profit)}</td>
+      <td style="color:${rateC};font-weight:600;">${r.profitRate}%</td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-success btn-sm" onclick="restoreTrash('${r.id}')">
+          <svg data-feather="refresh-cw"></svg>復元
+        </button>
+        <button class="btn btn-danger btn-sm" onclick="permanentDelete('${r.id}')">
+          <svg data-feather="x-circle"></svg>完全削除
+        </button>
+      </td>
+    </tr>`;
+  });
+  tbody.innerHTML = html;
+  feather.replace();
+}
+
+function restoreTrash(id) {
+  const idx = trashData.findIndex(r => r.id === id);
+  if (idx === -1) return;
+  const rec = trashData.splice(idx, 1)[0];
+  delete rec._deletedAt;
+  salesData.push(rec);
+  save(SK.sales, salesData);
+  save(SK.trash, trashData);
+  renderTrashTab();
+  renderAll();
+  toast('✅ 要員を復元しました');
+}
+
+function permanentDelete(id) {
+  if (!confirm('完全削除します。この操作は取り消せません。よろしいですか？')) return;
+  trashData = trashData.filter(r => r.id !== id);
+  save(SK.trash, trashData);
+  renderTrashTab();
+  toast('🗑 完全削除しました');
+}
+
+/* ================================================================
+   単価改定タブ
+   ================================================================ */
+let priceHistory = load(SK.priceHistory, []);
+
+function renderPriceTab() {
+  renderPriceKPI();
+  renderPriceFormList();
+  renderPriceHistoryTable();
+  drawPriceUpChart();
+}
+
+/* ダッシュボードKPI */
+function renderPriceKPI() {
+  let totalRevUp  = 0;
+  let totalCostUp = 0;
+  let revUpCount  = 0;
+
+  salesData.forEach(function(r) {
+    const thisYear = priceHistory.find(h => h.salesId === r.id && h.year === CUR_YEAR);
+    const prevYear = priceHistory.find(h => h.salesId === r.id && h.year === CUR_YEAR - 1);
+    if (thisYear) {
+      const revUp  = prevYear ? (thisYear.revPrice  - prevYear.revPrice)  : 0;
+      const costUp = prevYear ? (thisYear.costPrice - prevYear.costPrice) : 0;
+      totalRevUp  += revUp;
+      totalCostUp += costUp;
+      if (revUp > 0) revUpCount++;
+    }
+  });
+
+  const cnt = priceHistory.filter(h => h.year === CUR_YEAR).length;
+
+  document.getElementById('price-kpi-grid').innerHTML = [
+    { label:`${CUR_YEAR}年度 登録件数`,       value: cnt         + ' 件', cls:'accent' },
+    { label:`${CUR_YEAR}年度 売上単価UP合計`,  value:'¥'+fmt(totalRevUp),  cls: totalRevUp  >= 0 ? 'success' : 'danger' },
+    { label:`${CUR_YEAR}年度 仕入単価UP合計`,  value:'¥'+fmt(totalCostUp), cls:'warning' },
+    { label:'単価UP人数',                      value: revUpCount  + ' 名', cls:'' },
+  ].map(k => `
+    <div class="kpi-card">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value ${k.cls}">${k.value}</div>
+    </div>`).join('');
+}
+
+/* ④ 年度プルダウン付きフォームリスト */
+function renderPriceFormList() {
+  const cont  = document.getElementById('price-form-list');
+  const empty = document.getElementById('price-form-empty');
+
+  if (salesData.length === 0) {
+    cont.innerHTML = '';
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+
+  /* ④ 年度プルダウン 2020〜2030 */
+  const yearOpts = Array.from({length:11}, (_,i) => 2020+i)
+    .map(y => `<option value="${y}" ${y===CUR_YEAR?'selected':''}>${y}年度</option>`).join('');
+
+  const histYears = Array.from({length:5}, (_,i) => CUR_YEAR - 4 + i);
+  const sorted    = [...salesData].sort((a,b) => a.client.localeCompare(b.client,'ja'));
+
+  cont.innerHTML = sorted.map(r => {
+    /* ⑤ パートナーまたは個人事業主に仕入単価欄を表示 */
+    const hasCost    = (r.type === 'partner' || r.type === 'freelance');
+    const existingNow = priceHistory.find(h => h.salesId === r.id && h.year === CUR_YEAR);
+
+    const histItems = histYears.map(y => {
+      const rec  = priceHistory.find(h => h.salesId === r.id && h.year === y);
+      const prev = priceHistory.find(h => h.salesId === r.id && h.year === y - 1);
+      if (!rec) return `
+        <div class="pf-hist-item">
+          <div class="pf-hist-year">${y}年度</div>
+          <div class="pf-hist-val" style="color:var(--text-dim);">—</div>
+        </div>`;
+      const diff = prev ? rec.revPrice - prev.revPrice : null;
+      let diffHtml = '';
+      if (diff !== null) {
+        const cls = diff > 0 ? 'up' : diff < 0 ? 'down' : 'flat';
+        diffHtml = `<div class="pf-hist-diff ${cls}">${diff > 0 ? '+' : ''}¥${fmt(diff)}</div>`;
+      }
+      return `
+        <div class="pf-hist-item">
+          <div class="pf-hist-year">${y}年度</div>
+          <div class="pf-hist-val">¥${fmt(rec.revPrice)}</div>
+          ${hasCost && rec.costPrice ? `<div class="pf-hist-diff flat">仕入:¥${fmt(rec.costPrice)}</div>` : ''}
+          ${diffHtml}
+        </div>`;
+    }).join('');
+
+    return `
+      <div class="pf-row">
+        <div class="pf-meta">
+          <span style="font-weight:700;min-width:90px;font-size:14px;">${esc(r.name)}</span>
+          <span class="badge ${TYPE_BADGE[r.type]}">${TYPE_LABELS[r.type]}</span>
+          <span style="font-size:12px;color:var(--text-muted);">${esc(r.client)}</span>
+          <span style="font-size:11px;color:var(--text-dim);">
+            現在売上単価: <b style="color:var(--text);">¥${fmt(r.revenue)}</b>
+            ${hasCost ? ` ／ 仕入単価: <b style="color:var(--text);">¥${fmt(r.cost)}</b>` : ''}
+          </span>
+        </div>
+        <!-- 1行目: 年度プルダウン + 単価入力 -->
+        <div class="pf-year-inputs">
+          <div class="pf-year-item">
+            <label>年度を選択</label>
+            <select id="pfi-year-${r.id}" onchange="onPriceYearChange('${r.id}')">
+              ${yearOpts}
+            </select>
+          </div>
+          <div class="pf-year-item">
+            <label>売上単価（円）</label>
+            <input type="number" id="pfi-rev-${r.id}" placeholder="例: 700000"
+              value="${existingNow ? existingNow.revPrice : ''}" />
+          </div>
+          ${hasCost ? `
+          <div class="pf-year-item">
+            <label>仕入単価（円）</label>
+            <input type="number" id="pfi-cost-${r.id}" placeholder="例: 550000"
+              value="${existingNow ? existingNow.costPrice : ''}" />
+          </div>` : `<input type="hidden" id="pfi-cost-${r.id}" value="0" />`}
+          <div class="pf-save-btn">
+            <button class="btn btn-success btn-sm" onclick="submitPriceRevision('${r.id}')">
+              <svg data-feather="save"></svg>保存
+            </button>
+          </div>
+        </div>
+        <!-- 2行目: 過去5年履歴 -->
+        <div class="pf-history-row">
+          ${histItems || '<div class="pf-hist-empty">履歴なし</div>'}
+        </div>
+      </div>`;
+  }).join('');
+
+  feather.replace();
+}
+
+/* ④ 年度プルダウン変更時に既存値をセット */
+function onPriceYearChange(salesId) {
+  const selEl = document.getElementById('pfi-year-' + salesId);
+  if (!selEl) return;
+  const y        = parseInt(selEl.value);
+  const existing = priceHistory.find(h => h.salesId === salesId && h.year === y);
+  const revEl  = document.getElementById('pfi-rev-'  + salesId);
+  const costEl = document.getElementById('pfi-cost-' + salesId);
+  if (revEl)  revEl.value  = existing ? existing.revPrice  : '';
+  if (costEl && costEl.type !== 'hidden') costEl.value = existing ? (existing.costPrice || '') : '';
+}
+
+/* ⑥ 単価保存（選択年度に登録） */
+function submitPriceRevision(salesId) {
+  const rec = salesData.find(r => r.id === salesId);
+  if (!rec) return;
+  const hasCost = (rec.type === 'partner' || rec.type === 'freelance');
+
+  const selEl  = document.getElementById('pfi-year-' + salesId);
+  const revEl  = document.getElementById('pfi-rev-'  + salesId);
+  const costEl = document.getElementById('pfi-cost-' + salesId);
+  if (!selEl || !revEl) return;
+
+  const y         = parseInt(selEl.value);
+  const revPrice  = parseFloat(revEl.value);
+  const costPrice = (hasCost && costEl && costEl.type !== 'hidden') ? (parseFloat(costEl.value) || 0) : 0;
+
+  if (!y || isNaN(y))                   { toast('⚠ 年度を選択してください'); return; }
+  if (isNaN(revPrice) || revPrice <= 0) { toast('⚠ 売上単価を入力してください'); return; }
+
+  const existingIdx = priceHistory.findIndex(h => h.salesId === salesId && h.year === y);
+  const entry = {
+    id:        existingIdx >= 0 ? priceHistory[existingIdx].id : uid(),
+    year:      y,
+    salesId,
+    name:      rec.name,
+    client:    rec.client,
+    revPrice,
+    costPrice: hasCost ? costPrice : 0,
+  };
+
+  if (existingIdx >= 0) {
+    priceHistory[existingIdx] = entry;
+  } else {
+    priceHistory.push(entry);
+  }
+
+  save(SK.priceHistory, priceHistory);
+  renderPriceTab();
+  toast('✅ ' + y + '年度の単価を登録しました');
+}
+
+/* ⑥ 単価改定履歴削除（バグ修正） */
+function deletePriceHistory(id) {
+  if (!confirm('この改定データを削除しますか？')) return;
+  const idx = priceHistory.findIndex(h => h.id === id);
+  if (idx === -1) { toast('⚠ 対象データが見つかりません'); return; }
+  priceHistory.splice(idx, 1);
+  save(SK.priceHistory, priceHistory);
+  renderPriceTab();
+  toast('🗑 削除しました');
+}
+
+/* 改定履歴テーブル */
+function renderPriceHistoryTable() {
+  const tbody = document.getElementById('price-history-tbody');
+  const empty = document.getElementById('price-history-empty');
+  const list  = [...priceHistory].sort((a,b) => b.year - a.year || a.name.localeCompare(b.name,'ja'));
+
+  if (list.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = '';
+    feather.replace();
+    return;
+  }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = list.map(h => {
+    const prev     = priceHistory.find(p => p.salesId === h.salesId && p.year === h.year - 1);
+    const revDiff  = prev ? (h.revPrice  - prev.revPrice)  : null;
+    const costDiff = prev ? (h.costPrice - prev.costPrice) : null;
+
+    const revDiffStr  = revDiff !== null
+      ? `<span style="color:${revDiff >= 0 ? 'var(--success)' : 'var(--danger)'};">${revDiff >= 0 ? '+' : ''}¥${fmt(revDiff)}</span>`
+      : '<span style="color:var(--text-dim);">—</span>';
+    const costDiffStr = costDiff !== null && h.costPrice > 0
+      ? `<span style="color:${costDiff >= 0 ? '#c07000' : 'var(--success)'};">${costDiff >= 0 ? '+' : ''}¥${fmt(costDiff)}</span>`
+      : '<span style="color:var(--text-dim);">—</span>';
+
+    return `<tr>
+      <td style="font-weight:700;">${h.year}年度</td>
+      <td>${esc(h.name)}</td>
+      <td>${esc(h.client)}</td>
+      <td>¥${fmt(h.revPrice)}</td>
+      <td>${revDiffStr}</td>
+      <td>${h.costPrice ? '¥'+fmt(h.costPrice) : '—'}</td>
+      <td>${h.costPrice ? costDiffStr : '—'}</td>
+      <td>
+        <button class="btn btn-danger btn-sm" onclick="deletePriceHistory('${h.id}')">
+          <svg data-feather="trash-2"></svg>削除
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+  feather.replace();
+}
+
+/* 単価UP推移グラフ */
+function drawPriceUpChart() {
+  const canvas = document.getElementById('price-up-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const W = rect.width || 600;
+  const H = 220;
+  canvas.width  = W * dpr; canvas.height = H * dpr;
+  canvas.style.width  = W + 'px'; canvas.style.height = H + 'px';
+  ctx.scale(dpr, dpr);
+
+  const PAD = { top:22, right:20, bottom:40, left:85 };
+  ctx.clearRect(0, 0, W, H);
+
+  const years  = Array.from({length:5}, (_,i) => CUR_YEAR - 4 + i);
+  const revUs  = years.map(y => salesData.reduce((total, r) => {
+    const thisY = priceHistory.find(h => h.salesId === r.id && h.year === y);
+    const prevY = priceHistory.find(h => h.salesId === r.id && h.year === y - 1);
+    return (thisY && prevY) ? total + (thisY.revPrice - prevY.revPrice) : total;
+  }, 0));
+  const costUs = years.map(y => salesData.reduce((total, r) => {
+    const thisY = priceHistory.find(h => h.salesId === r.id && h.year === y);
+    const prevY = priceHistory.find(h => h.salesId === r.id && h.year === y - 1);
+    return (thisY && prevY) ? total + (thisY.costPrice - prevY.costPrice) : total;
+  }, 0));
+
+  const rawMax = Math.max(...revUs, ...costUs, 1);
+  const maxVal = niceMax(rawMax);
+  const chartW = W - PAD.left - PAD.right;
+  const chartH = H - PAD.top  - PAD.bottom;
+
+  if (rawMax <= 1 && revUs.every(v => v === 0)) {
+    ctx.fillStyle = '#7a90aa'; ctx.font = '13px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('改定データが登録されるとグラフが表示されます', W/2, H/2);
+    return;
+  }
+
+  const gn = 4;
+  ctx.strokeStyle = '#d0d9e8'; ctx.lineWidth = 1;
+  for (let i = 0; i <= gn; i++) {
+    const y = PAD.top + (chartH / gn) * i;
+    ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(PAD.left + chartW, y); ctx.stroke();
+    const v = maxVal - (maxVal / gn) * i;
+    ctx.fillStyle = '#7a90aa'; ctx.font = '10px monospace'; ctx.textAlign = 'right';
+    ctx.fillText('¥'+fmt(Math.round(v)), PAD.left - 5, y + 4);
+  }
+
+  const gw = chartW / years.length;
+  const bw = gw * 0.32;
+  years.forEach((y, i) => {
+    const x0 = PAD.left + gw * i;
+    const rv  = Math.max(0, revUs[i]);
+    const rh  = (rv / maxVal) * chartH;
+    const rx  = x0 + gw * 0.09;
+    const gR  = ctx.createLinearGradient(0, PAD.top + chartH - rh, 0, PAD.top + chartH);
+    gR.addColorStop(0, '#1a3a6b'); gR.addColorStop(1, 'rgba(26,58,107,0.25)');
+    ctx.fillStyle = gR;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(rx, PAD.top + chartH - rh, bw, rh, [3,3,0,0]);
+    else ctx.rect(rx, PAD.top + chartH - rh, bw, rh);
+    ctx.fill();
+
+    const cv  = Math.max(0, costUs[i]);
+    const ch_ = (cv / maxVal) * chartH;
+    const cx_ = rx + bw + gw * 0.07;
+    const gC  = ctx.createLinearGradient(0, PAD.top + chartH - ch_, 0, PAD.top + chartH);
+    gC.addColorStop(0, '#c07000'); gC.addColorStop(1, 'rgba(192,112,0,0.25)');
+    ctx.fillStyle = gC;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(cx_, PAD.top + chartH - ch_, bw, ch_, [3,3,0,0]);
+    else ctx.rect(cx_, PAD.top + chartH - ch_, bw, ch_);
+    ctx.fill();
+
+    ctx.fillStyle = '#7a90aa'; ctx.font = '11px monospace'; ctx.textAlign = 'center';
+    ctx.fillText(y + '年', PAD.left + gw * i + gw / 2, H - PAD.bottom + 16);
+  });
+}
+
+/* ================================================================
+   全体再描画
+   ================================================================ */
+function renderAll() {
+  renderKPI();
+  renderSalesTable();
+  renderGoalProgress();
+  drawMonthlyChart();
+  if (document.getElementById('tab-customer').classList.contains('active')) renderCustomerTab();
+  if (document.getElementById('tab-price').classList.contains('active'))   renderPriceTab();
+  if (document.getElementById('tab-trash').classList.contains('active'))   renderTrashTab();
+}
+
+window.addEventListener('resize', () => {
+  drawMonthlyChart();
+  if (document.getElementById('tab-price').classList.contains('active')) drawPriceUpChart();
+});
+
+/* ================================================================
+   初期化
+   ================================================================ */
+(function init() {
+  initGoalInput();
+  initMonthInputs();
+  renderKPI();
+  renderSalesTable();
+  renderGoalProgress();
+  drawMonthlyChart();
+  feather.replace();
+})();
+</script>
+</body>
+</html>
